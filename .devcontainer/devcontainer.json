@@ -1,0 +1,11 @@
+{
+  "name": "Graduate Lab · Python portfolio",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bookworm",
+  "forwardPorts": [8000],
+  "portsAttributes": {
+    "8000": {
+      "label": "Graduate Lab — five projects",
+      "onAutoForward": "notify"
+    }
+  }
+}
