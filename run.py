@@ -2,6 +2,8 @@
 import argparse
 import json
 import mimetypes
+import os
+import re
 import sqlite3
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -15,6 +17,23 @@ from projects.minilang import MiniLang
 from shared.core import APIError
 
 ROOT = Path(__file__).resolve().parent
+
+
+def allowed_addresses(port, environ=None):
+    """Trust local addresses and only this Codespace's exact forwarded host."""
+    environ = os.environ if environ is None else environ
+    hosts = {f"127.0.0.1:{port}", f"localhost:{port}"}
+    origins = {f"http://{host}" for host in hosts}
+    name = environ.get("CODESPACE_NAME", "")
+    domain = environ.get("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN", "")
+    if (environ.get("CODESPACES") == "true"
+            and re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", name)
+            and len(domain) <= 253
+            and re.fullmatch(r"[a-z0-9]+(?:[-a-z0-9]*[a-z0-9])?(?:\.[a-z0-9]+(?:[-a-z0-9]*[a-z0-9])?)+", domain)):
+        forwarded_host = f"{name}-{port}.{domain}"
+        hosts.add(forwarded_host)
+        origins.add(f"https://{forwarded_host}")
+    return hosts, origins
 
 
 def create_server(port=8000, data_dir=None):
@@ -37,9 +56,8 @@ def create_server(port=8000, data_dir=None):
         def dispatch(self):
             try:
                 host = self.headers.get("Host", "")
-                allowed_hosts = {f"127.0.0.1:{self.server.server_port}", f"localhost:{self.server.server_port}"}
-                if host not in allowed_hosts:
-                    raise APIError("Use the localhost URL printed by the server.", 403)
+                if host not in self.server.allowed_hosts:
+                    raise APIError("Use the localhost or Codespaces URL for this server.", 403)
                 url = urlsplit(self.path)
                 if url.path.startswith("/api/"):
                     parts = url.path.split("/", 3)
@@ -48,7 +66,7 @@ def create_server(port=8000, data_dir=None):
                     data = {}
                     if self.command != "GET":
                         origin = self.headers.get("Origin")
-                        if origin and origin not in {f"http://{h}" for h in allowed_hosts}:
+                        if origin and origin not in self.server.allowed_origins:
                             raise APIError("Cross-origin writes are not allowed.", 403)
                         if not self.headers.get("Content-Type", "").startswith("application/json"):
                             raise APIError("Send application/json.", 415)
@@ -89,6 +107,7 @@ def create_server(port=8000, data_dir=None):
         do_GET = do_POST = do_PATCH = do_DELETE = dispatch
 
     server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    server.allowed_hosts, server.allowed_origins = allowed_addresses(server.server_port)
     server.daemon_threads = True
     return server
 

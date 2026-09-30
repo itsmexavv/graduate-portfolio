@@ -16,6 +16,18 @@ An AI-assisted learning portfolio for a computer science student exploring junio
 
 All records, campus locations and measurements are synthetic. The projects are runnable learning MVPs, not production systems or evidence of commercial experience.
 
+## Run in your browser with GitHub Codespaces
+
+1. Open this repository on GitHub and click **Code** → **Codespaces** → **Create codespace on main**.
+2. Wait for the browser editor to finish setting up. Open **Terminal** → **New Terminal** if a terminal is not already visible.
+3. Run `python run.py` in that terminal.
+4. Click **Open in Browser** in the port notification, or open the **Ports** tab and click the globe beside port **8000**.
+5. Choose any of the five projects in the app's sidebar.
+
+Keep port visibility **Private**. The app recognizes this Codespace's exact forwarded Host and HTTPS Origin using GitHub-provided environment variables. Other hosts and foreign origins remain rejected. Locally it continues to bind to loopback. Codespaces is a development environment, not permanent hosting; stop the Codespace after testing.
+
+If you created a Codespace before this support was added, run `git pull` and restart `python run.py`. Forward port 8000 manually in the Ports tab if necessary. GitHub Pages cannot run this Python backend.
+
 ## Run locally
 
 Install **Python 3.11 or newer**. No third-party Python packages, API keys or database service are needed.
@@ -101,7 +113,7 @@ Use [track exploration](docs/CAREER_PATHS.md) to compare what you enjoy and [int
 
 ## Scope and limitations
 
-- The server binds to `127.0.0.1` and accepts local Host headers. It is intended for one-person local demos. It has no user authentication or authorization.
+- The server binds to `127.0.0.1` and accepts local Host headers plus its own exact forwarded host when running in GitHub Codespaces. Keep forwarded ports private. It is intended for one-person development demos. It has no application user authentication or authorization.
 - Do not expose it on the internet, use real personal records, or treat it as a deployed multi-user service. Add authentication, proper hosting, access controls and migration strategy before that use.
 - The implementation uses Python's standard-library HTTP server for a small dependency-free demonstration. Python documents that server as unsuitable for production: [official HTTP server documentation](https://docs.python.org/3/library/http.server.html).
 - Attendance reports show absent, present and completed, without lateness policies or event-date restrictions.
