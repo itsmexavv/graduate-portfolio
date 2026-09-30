@@ -4,6 +4,18 @@ An AI-assisted learning portfolio for a computer science student exploring junio
 
 ![Graduate Lab overview](docs/screenshots/overview.png)
 
+## Standalone repositories
+
+Each project is also available as its own independent repository, with a dedicated dashboard, demo guide, tests, screenshots, and Codespaces setup. Clone one repository and run `python run.py`; it does not require this collection or any of the other projects.
+
+| Project | Independent repository |
+| --- | --- |
+| SmartFind | [smartfind-inventory](https://github.com/itsmexavv/smartfind-inventory) |
+| AttendFlow | [attendflow-attendance](https://github.com/itsmexavv/attendflow-attendance) |
+| PesoLens | [pesolens-analytics](https://github.com/itsmexavv/pesolens-analytics) |
+| AccessPath | [accesspath-routing](https://github.com/itsmexavv/accesspath-routing) |
+| MiniLang | [minilang-workbench](https://github.com/itsmexavv/minilang-workbench) |
+
 ## The projects
 
 | Project | What it does | Skills to explore | Project guide |
