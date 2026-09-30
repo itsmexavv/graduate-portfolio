@@ -3,16 +3,18 @@ import json
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
-from run import create_server
+from run import allowed_addresses, create_server
 
 
 class HTTPTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.temp=tempfile.TemporaryDirectory()
-        cls.server=create_server(0,cls.temp.name)
+        with patch.dict('os.environ', {'CODESPACES':'true', 'CODESPACE_NAME':'demo-space-123', 'GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN':'app.github.dev'}):
+            cls.server=create_server(0,cls.temp.name)
         cls.thread=threading.Thread(target=cls.server.serve_forever,daemon=True)
         cls.thread.start()
         cls.base=f'http://127.0.0.1:{cls.server.server_port}'
@@ -58,6 +60,22 @@ class HTTPTests(unittest.TestCase):
     def test_cross_origin_write_and_foreign_host_rejected(self):
         self.assertEqual(self.request('/api/minilang/run','POST',{'source':'print 1;'}, {'Origin':'https://example.com'})[0],403)
         self.assertEqual(self.request('/',headers={'Host':'evil.example'})[0],403)
+
+    def test_codespace_host_and_origin_support_get_and_write(self):
+        host=f'demo-space-123-{self.server.server_port}.app.github.dev'
+        self.assertEqual(self.request('/',headers={'Host':host})[0],200)
+        status,result,_=self.request('/api/minilang/run','POST',{'source':'print 7;'}, {'Host':host,'Origin':'https://'+host})
+        self.assertEqual((status,result['output']),(201,['7']))
+        other=f'other-space-{self.server.server_port}.app.github.dev'
+        self.assertEqual(self.request('/',headers={'Host':other})[0],403)
+        self.assertEqual(self.request('/api/minilang/run','POST',{'source':'print 1;'}, {'Host':host,'Origin':'https://'+other})[0],403)
+
+    def test_codespace_detection_requires_valid_environment(self):
+        base={'CODESPACES':'true','CODESPACE_NAME':'demo-space-123','GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN':'app.github.dev'}
+        for changes in ({'CODESPACES':'false'}, {'CODESPACE_NAME':'invalid/name'}, {'GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN':'app.github.dev/evil'}):
+            hosts,origins=allowed_addresses(8000,{**base,**changes})
+            self.assertEqual(hosts,{'localhost:8000','127.0.0.1:8000'})
+            self.assertEqual(origins,{'http://localhost:8000','http://127.0.0.1:8000'})
 
     def test_private_files_and_unknown_routes_not_served(self):
         for path in ['/../run.py','/data/smartfind.db','/api/unknown/x','/missing']:
