@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+data/
+*.db
+*.db-shm
+*.db-wal
+.venv/
+.env
+.DS_Store
+node_modules/
+test-results/
+playwright-report/
