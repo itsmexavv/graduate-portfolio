@@ -2,7 +2,7 @@
 
 ## Implemented
 
-- Bind to the loopback interface; reject unexpected Host headers.
+- Bind to the loopback interface; reject unexpected Host headers. In Codespaces, allow only the exact GitHub-provided forwarded hostname and its HTTPS Origin; keep port visibility private.
 - JSON-only writes; reject foreign browser Origins and non-object JSON bodies.
 - Bound request bodies, text fields, numbers, CSV imports and compiler execution.
 - Parameterized SQL, foreign-key constraints and transaction rollback.
